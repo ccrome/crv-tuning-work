@@ -1,0 +1,48 @@
+{
+  "split": "training",
+  "routes": [
+    "0000005c--3c70bb383d",
+    "0000005d--46b3832579"
+  ],
+  "sequence_count": 49,
+  "sample_count": 60916,
+  "objective": "rollout",
+  "training_horizon_s": 5.0,
+  "optimizer": {
+    "success": true,
+    "message": "`xtol` termination condition is satisfied.",
+    "nfev": 28,
+    "cost": 557.2577730803996
+  },
+  "plant_parameters": {
+    "gas_gain": 1.3002986855776295,
+    "gas_tau_s": 1.1017804239945816,
+    "gas_delay_s": 2.928551642640639e-22,
+    "brake_gain": 1.0179441679019559,
+    "brake_tau_s": 0.5188817325926077,
+    "brake_delay_s": 4.76259699811252e-19,
+    "coast_tau_s": 0.6967640007886278,
+    "drag_c0": 4.551945309345443e-15,
+    "drag_c1": 2.2279902918390828e-13,
+    "drag_c2": 4.606424432283207e-05
+  },
+  "controller_parameters": {
+    "kp": 0.3738599795501495,
+    "ki": 0.002297854438211175,
+    "kff": 0.8990170135044695,
+    "command_tau_s": 0.05009226048078647,
+    "integral_limit": 15.0
+  },
+  "objective_rmse": 0.12053021581192364,
+  "command_fit_rmse_mps2": 0.2568461483593072,
+  "reference_replay_horizon_s": 10.0,
+  "windows": 58700,
+  "simulated_tracking_rmse_mph": 0.958007568776528,
+  "recorded_tracking_rmse_mph": 0.9180469587799449,
+  "simulated_tracking_p95_abs_mph": 1.7835494214392604,
+  "command_rmse_mps2": 0.19248442743934951,
+  "per_route_simulated_tracking_rmse_mph": {
+    "0000005c--3c70bb383d": 0.817992864653176,
+    "0000005d--46b3832579": 1.1007909638677749
+  }
+}

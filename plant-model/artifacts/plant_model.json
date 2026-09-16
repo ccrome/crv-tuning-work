@@ -1,0 +1,26 @@
+{
+  "parameter_names": [
+    "gas_gain",
+    "gas_tau_s",
+    "gas_delay_s",
+    "brake_gain",
+    "brake_tau_s",
+    "brake_delay_s",
+    "coast_tau_s",
+    "drag_c0",
+    "drag_c1",
+    "drag_c2"
+  ],
+  "parameters": {
+    "gas_gain": 1.3002986855776295,
+    "gas_tau_s": 1.1017804239945816,
+    "gas_delay_s": 2.928551642640639e-22,
+    "brake_gain": 1.0179441679019559,
+    "brake_tau_s": 0.5188817325926077,
+    "brake_delay_s": 4.76259699811252e-19,
+    "coast_tau_s": 0.6967640007886278,
+    "drag_c0": 4.551945309345443e-15,
+    "drag_c1": 2.2279902918390828e-13,
+    "drag_c2": 4.606424432283207e-05
+  }
+}

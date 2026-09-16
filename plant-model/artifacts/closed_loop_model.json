@@ -1,0 +1,16 @@
+{
+  "parameter_names": [
+    "kp",
+    "ki",
+    "kff",
+    "command_tau_s",
+    "integral_limit"
+  ],
+  "parameters": {
+    "kp": 0.3738599795501495,
+    "ki": 0.002297854438211175,
+    "kff": 0.8990170135044695,
+    "command_tau_s": 0.05009226048078647,
+    "integral_limit": 15.0
+  }
+}

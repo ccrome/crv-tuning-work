@@ -1,0 +1,33 @@
+{
+  "split": "training",
+  "routes": [
+    "0000005c--3c70bb383d",
+    "0000005d--46b3832579"
+  ],
+  "sequence_count": 51,
+  "sample_count": 60963,
+  "optimizer": {
+    "success": true,
+    "message": "`ftol` termination condition is satisfied.",
+    "nfev": 12,
+    "cost": 281.9164443600608
+  },
+  "parameters": {
+    "gas_gain": 1.3002986855776295,
+    "gas_tau_s": 1.1017804239945816,
+    "gas_delay_s": 2.928551642640639e-22,
+    "brake_gain": 1.0179441679019559,
+    "brake_tau_s": 0.5188817325926077,
+    "brake_delay_s": 4.76259699811252e-19,
+    "coast_tau_s": 0.6967640007886278,
+    "drag_c0": 4.551945309345443e-15,
+    "drag_c1": 2.2279902918390828e-13,
+    "drag_c2": 4.606424432283207e-05
+  },
+  "one_step_residual_rmse_mps2": 0.07867445885610111,
+  "rollout_horizon_s": 5.0,
+  "rollout_speed_rmse_mps": 0.4376242201163883,
+  "rollout_speed_rmse_mph": 0.9789373724502732,
+  "rollout_accel_rmse_mps2": 0.1942432323024505,
+  "rollout_speed_p95_abs_mph": 2.19265185377059
+}

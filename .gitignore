@@ -1,0 +1,7 @@
+# Raw routes and generated caches are local data, not Git artifacts.
+route-data/
+dashboard/cache/
+dashboard/venv/
+dashboard/__pycache__/
+plant-model/__pycache__/
+*.pyc
