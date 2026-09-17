@@ -133,9 +133,12 @@ def main_figure(frame: pd.DataFrame, route_start: datetime | None = None,
           hoverinfo="skip", showlegend=True,
         ), row=1, col=1)
   x = frame["time"]
-  line(fig, 1, x, frame["speed_mph"], "Actual speed", colors["blue"])
+  line(fig, 1, x, frame["speed_mph"], "Controller speed (vEgo)", colors["blue"])
   if "speed_cluster_mph" in frame and frame["speed_cluster_mph"].notna().any() and (frame["speed_cluster_mph"] > 0).any():
     line(fig, 1, x, frame["speed_cluster_mph"], "Honda cluster speed", colors["cyan"], dash="dash")
+  if {"gps_speed_mph", "gps_has_fix", "gps_accuracy"}.issubset(frame.columns):
+    gps_speed = frame["gps_speed_mph"].where(frame["gps_has_fix"].fillna(False) & frame["gps_accuracy"].between(0, 25))
+    line(fig, 1, x, gps_speed, "GPS ground speed", colors["orange"], dash="dot")
   line(fig, 1, x, frame["plan_speed_mph"], "Plan speed", colors["green"])
   line(fig, 1, x, frame["set_speed_mph"], "Cruise setpoint", colors["pink"], dash="dot")
 

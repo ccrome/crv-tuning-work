@@ -187,6 +187,7 @@ def extract_route(log_root: Path, route: str) -> tuple[pd.DataFrame, dict[str, s
   base["speed_mph"] = base["v_ego"] * 2.236936
   base["speed_raw_mph"] = base["v_ego_raw"] * 2.236936
   base["speed_cluster_mph"] = base["v_ego_cluster"] * 2.236936
+  base["gps_speed_mph"] = base["gps_speed"] * 2.236936
   base["set_speed_mph"] = base["set_speed"] * 2.236936
   base["plan_speed_mph"] = base["plan_speed"] * 2.236936
   base["speed_error_mph"] = (base["v_ego"] - base["set_speed"]) * 2.236936
