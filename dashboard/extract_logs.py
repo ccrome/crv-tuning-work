@@ -59,6 +59,8 @@ def extract_route(log_root: Path, route: str) -> tuple[pd.DataFrame, dict[str, s
         rows[service].append({
           "t": t,
           "v_ego": float(x.vEgo),
+          "v_ego_raw": float(x.vEgoRaw),
+          "v_ego_cluster": float(x.vEgoCluster),
           "a_ego": float(x.aEgo),
           "v_cruise": float(x.vCruise) / 3.6,
           "standstill": bool(x.standstill),
@@ -183,6 +185,8 @@ def extract_route(log_root: Path, route: str) -> tuple[pd.DataFrame, dict[str, s
   base["time"] = base["t"] - base["t"].iloc[0]
   base["segment"] = np.floor(base["time"] / 60).astype(int)
   base["speed_mph"] = base["v_ego"] * 2.236936
+  base["speed_raw_mph"] = base["v_ego_raw"] * 2.236936
+  base["speed_cluster_mph"] = base["v_ego_cluster"] * 2.236936
   base["set_speed_mph"] = base["set_speed"] * 2.236936
   base["plan_speed_mph"] = base["plan_speed"] * 2.236936
   base["speed_error_mph"] = (base["v_ego"] - base["set_speed"]) * 2.236936

@@ -134,6 +134,8 @@ def main_figure(frame: pd.DataFrame, route_start: datetime | None = None,
         ), row=1, col=1)
   x = frame["time"]
   line(fig, 1, x, frame["speed_mph"], "Actual speed", colors["blue"])
+  if "speed_cluster_mph" in frame and frame["speed_cluster_mph"].notna().any() and (frame["speed_cluster_mph"] > 0).any():
+    line(fig, 1, x, frame["speed_cluster_mph"], "Honda cluster speed", colors["cyan"], dash="dash")
   line(fig, 1, x, frame["plan_speed_mph"], "Plan speed", colors["green"])
   line(fig, 1, x, frame["set_speed_mph"], "Cruise setpoint", colors["pink"], dash="dot")
 
