@@ -95,6 +95,13 @@ python3 tools/crv_long_tune.py load low_speed
 On comma four, the setting is intended to be exposed through SunnyLink because
 the C4 touchscreen has a simplified settings UI.
 
+## Speed calibration
+
+See [SPEED_CALIBRATION.md](SPEED_CALIBRATION.md) for the cross-route evidence
+that Honda cluster speed is a stable multiplicative reference for the
+controller-speed signal, along with the proposed bounded slow-adaptation
+design and validation plan.
+
 ## Safety and experiment procedure
 
 Run one profile per drive and record the profile, route, software commit, road
