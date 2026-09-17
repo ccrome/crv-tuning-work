@@ -2,7 +2,13 @@
 
 ## Status
 
-Proposed design; not implemented in SunnyPilot or on the vehicle.
+Implemented in the local `crv-sng-tuning` source branch; not yet installed or
+validated on-road. The current stripped installer release does not yet contain
+the matching compiled parameter registry, so the estimator safely operates
+drive-locally there but cannot persist a learned value. A complete ARM prebuilt
+release containing the updated `params_pyx` binary is required before
+persistence can be enabled. The estimator is CR-V 5G-only and begins at a
+neutral scale of `1.0` on a fresh device.
 
 The current CR-V controller uses a high-rate CAN wheel/transmission speed
 signal (`vEgo`). On this vehicle, that signal is consistently lower than the
@@ -64,10 +70,9 @@ difference to monitor, not a signal that GPS should directly drive the
 controller. Matching the cluster means a selected speed will match what the
 driver sees on the Honda dash.
 
-## Adaptive estimator proposal
+## Adaptive estimator implementation
 
-Implement a CR-V-specific, persistent scale estimator in the Honda vehicle
-interface.
+The Honda vehicle interface now contains a CR-V-specific persistent estimator:
 
 - Retain an unscaled wheel-speed measurement exclusively for estimation.
 - Observe the Honda cluster speed only when it is valid, fresh, and above
@@ -78,20 +83,28 @@ interface.
   to planning and longitudinal control.
 - Never use the already-scaled published `vEgo` as the estimator input; that
   would make the estimator chase its own output.
-- Use a slow eligible-driving time constant of roughly 30 minutes, with
-  conservative bounds such as 0.98–1.06 and bounded update steps.
+- Use 30-second eligible-driving regression batches and a 30-minute eligible-
+  driving time constant, with hard 0.98–1.06 bounds.
 - Persist the estimate periodically rather than writing a parameter every
   control cycle.
 - Log GPS-versus-cluster error for validation and flag sustained disagreement;
   do not use it to update the scale.
 
-## Validation plan before implementation
+Once a matching prebuilt release is available, the learned value is stored in
+the device-local persistent parameter `HondaCrvSpeedScale`. It is intentionally
+not backed up, because calibration is specific to the vehicle/device
+combination. Until then, an older prebuilt registry is detected safely and the
+estimator remains in-memory for the current drive. The correction is blended
+from 1.0 at 5 m/s to fully applied at 10 m/s, preserving the existing
+low-speed stop-and-go behavior.
+
+## Validation plan before deployment
 
 1. Collect several more steady-speed drives at multiple speeds, tire states,
    temperatures, and road conditions.
 2. Confirm cluster/controller scale remains multiplicative and within the
    proposed bounds for each drive.
-3. Replay logs with the proposed estimator to check convergence, startup
+3. Replay logs with the estimator to check convergence, startup
    behavior, and resistance to cluster quantization.
 4. Test on-road with a fixed safe initial scale and a very slow adaptation
    rate, confirming that cluster speed matches the setpoint without introducing
@@ -99,3 +112,6 @@ interface.
    reboot.
 5. Keep GPS validation dashboards enabled to detect a changed cluster/ground
    relationship after tire or vehicle changes.
+6. Before deployment, build a complete ARM prebuilt release from the full
+   source tree and verify that its compiled `params_pyx` recognizes
+   `HondaCrvSpeedScale`.
