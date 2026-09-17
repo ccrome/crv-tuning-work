@@ -1,0 +1,2 @@
+route,segments,split,tuning_label,software_commit,automation,notes
+00000009--e1324b27be,19,training,best guess v1,9589b6675,enabled,"No stop-and-go; highway and around-town driving; seemed better overall; settled 1–2 mph above set speed; follow behavior seemed pretty good"

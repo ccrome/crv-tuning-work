@@ -44,8 +44,8 @@ for route in "$@"; do
     exit 2
   fi
   echo "Syncing $route from $comma_user@$comma_host"
-  rsync -a --progress $dry_run \
+  rsync -a --size-only --partial --progress $dry_run \
     --include='*/' --include='rlog.zst' --include='qlog.zst' --exclude='*' \
     -e "ssh -i $comma_key" \
-    "$comma_user@$comma_host:$remote_root/$route--*/" "$local_root/"
+    "$comma_user@$comma_host:$remote_root/$route--*" "$local_root/"
 done
