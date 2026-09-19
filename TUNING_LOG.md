@@ -72,7 +72,8 @@ Baseline diagnosis:
 
 Status: added; expected failure on stock until a focused safety fix exists.
 
-- Source commit: `87a28f333e`
+- Source commit: `b6f9abe52e` (stacked on the brake-hold branch)
+- Draft PR: https://github.com/ccrome/sunnypilot/pull/4
 - Test: `openpilot/selfdrive/test/longitudinal_maneuvers/test_crv_lead_source_regression.py`
 - Setup: establish a slower lead at `12 m` while traveling at `7.0 m/s`, then
   remove both tracker candidates for 0.5 seconds while cruise remains set.
