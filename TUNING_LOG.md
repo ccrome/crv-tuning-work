@@ -19,9 +19,13 @@ tracked separately and are not longitudinal tuning variables.
 
 ## Baseline S0 — stock SunnyPilot longitudinal control
 
-Status: baseline; behavior being restored on 2026-09-19.
+Status: active baseline, restored and installed on 2026-09-19.
 
 - Software: SunnyPilot `release-mici` `6a17f75c6bcb67c85f252a1acc342d94d5b8a4d2`
+- Rollback source commit: `dc1b7d7e6f8fecaaa9d413d45b4acb997f242d23`
+- Installed native release: `b9f77ff5984c429ca6cd63c6e3229c5aae77f5b3`
+- Retained non-tuning changes: brake-hold engagement protection and CR-V
+  cluster-speed calibration
 - Vehicle: `HONDA_CRV_5G`
 - Longitudinal actuator delay: `0.5 s`
 - Logged personality: `relaxed`
