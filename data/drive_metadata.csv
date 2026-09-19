@@ -1,2 +1,5 @@
 route,segments,split,tuning_label,software_commit,automation,notes
+0000005c--3c70bb383d,71,training,stock S0,6a17f75c6bcb67c85f252a1acc342d94d5b8a4d2,enabled,"Stock baseline; severe low-speed lead/source switching; ten stopped-following episodes; model-lead distance reached 1.04 m"
+0000005d--46b3832579,51,training,stock S0,6a17f75c6bcb67c85f252a1acc342d94d5b8a4d2,enabled,"Stock baseline; five stopped-following episodes; highway speed oscillation and overshoot"
 00000009--e1324b27be,19,training,best guess v1,1ac757a52977df6ed4276c42f1b77be9e5f0e229,enabled,"No stop-and-go; highway and around-town driving; seemed better overall; settled 1–2 mph above set speed on the Honda cluster; follow behavior seemed pretty good"
+00000003--a8808762fc,10,rejected,safeV1,1233f9089c7e512545a5b38ccc4bc0a1b142a812,enabled,"Rejected: frequent gas/coast/brake switching, high jerk, harsh acceleration and launches; fixed relaxed personality"
