@@ -93,6 +93,37 @@ The expected-failure decorator must be removed when implementing the safety
 fix. At that point, the test becomes a required normal pass and an unexpected
 success before that change remains visible to CI.
 
+## Experiment LSR2 — CR-V close-lead dropout hold
+
+Status: implemented and validated in simulation; not deployed or road-tested.
+
+- Source commit: `2b89b2babd`
+- Draft PR: https://github.com/ccrome/sunnypilot/pull/5 (stacked on LSR1)
+- Scope: only `HONDA_CRV_5G`; it has no parameter, UI setting, personality,
+  following-distance, experimental-mode, or Honda gas/brake crossover change.
+- Behavior: after a credible lead is closer than `11 m` and closing faster than
+  `1.0 m/s`, a loss of both radar lead candidates starts a `0.5 s` hold. During
+  that hold, output cannot exceed zero and is released from the prior braking
+  command at no more than `1.0 m/s³`.
+- Test change: LSR1 is now a normal required pass, using an explicitly enabled
+  CR-V stock-longitudinal simulation rather than an expected failure.
+- Validation:
+
+  ```bash
+  .venv/bin/python -m unittest \
+    openpilot.selfdrive.test.longitudinal_maneuvers.test_crv_lead_source_regression
+  .venv/bin/python -m unittest \
+    openpilot.selfdrive.test.longitudinal_maneuvers.test_longitudinal
+  .venv/bin/ruff check \
+    openpilot/selfdrive/controls/lib/longitudinal_planner.py \
+    openpilot/selfdrive/test/longitudinal_maneuvers/plant.py \
+    openpilot/selfdrive/test/longitudinal_maneuvers/test_crv_lead_source_regression.py
+  ```
+
+On-road acceptance: test a low-speed close-following route with bookmarks;
+confirm no release toward a close, closing lead and no new harsh hold/release
+feel. Compare jerk, stop gap, and source changes against S0.
+
 ## Experiment BG1 — “best guess v1”
 
 Status: incomplete evidence; not suitable as a final comparison.
