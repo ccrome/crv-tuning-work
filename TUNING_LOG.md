@@ -68,6 +68,30 @@ Baseline diagnosis:
    overshoot.
 3. These are separate problems and should be tested separately.
 
+## Regression test LSR1 — close, closing lead-source dropout
+
+Status: added; expected failure on stock until a focused safety fix exists.
+
+- Source commit: `87a28f333e`
+- Test: `openpilot/selfdrive/test/longitudinal_maneuvers/test_crv_lead_source_regression.py`
+- Setup: establish a slower lead at `12 m` while traveling at `7.0 m/s`, then
+  remove both tracker candidates for 0.5 seconds while cruise remains set.
+- Requirement: while the lead remains within `11 m` and closing faster than
+  `1.0 m/s`, planner output must not become positive merely because the lead
+  source changes to cruise.
+- Current stock result: expected failure. It switches to cruise and reaches
+  approximately `+1.26 m/s²` while the gap is below `10 m`.
+- Test command:
+
+  ```bash
+  .venv/bin/python -m unittest \
+    openpilot.selfdrive.test.longitudinal_maneuvers.test_crv_lead_source_regression
+  ```
+
+The expected-failure decorator must be removed when implementing the safety
+fix. At that point, the test becomes a required normal pass and an unexpected
+success before that change remains visible to CI.
+
 ## Experiment BG1 — “best guess v1”
 
 Status: incomplete evidence; not suitable as a final comparison.
