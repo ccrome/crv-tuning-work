@@ -11,9 +11,10 @@ from zoneinfo import ZoneInfo
 
 import numpy as np
 import pandas as pd
-
+from opendbc.can import CANParser
+from opendbc.car import Bus
+from opendbc.car.honda.values import CAR, DBC
 from openpilot.tools.lib.logreader import LogReader
-
 
 DEFAULT_LOG_ROOT = Path("/home/caleb/openpilot/route-data")
 DEFAULT_CACHE_ROOT = Path(__file__).resolve().parent / "cache"
@@ -39,6 +40,7 @@ def extract_route(log_root: Path, route: str) -> tuple[pd.DataFrame, dict[str, s
 
   rows: dict[str, list[dict]] = defaultdict(list)
   metadata: dict[str, str] = {"route": route, "segments": str(len(files))}
+  sendcan_parser = CANParser(DBC[CAR.HONDA_CRV_5G][Bus.pt], [("ACC_CONTROL", 0)], 1)
   # The device clock can be stale at ignition, but the final segment mtime is
   # synchronized. Back-calculate the route start from the segment number.
   last_segment = segment_number(files[-1])
@@ -109,16 +111,59 @@ def extract_route(log_root: Path, route: str) -> tuple[pd.DataFrame, dict[str, s
           "allow_brake": bool(x.allowBrake),
         })
       elif service == "radarState":
-        x = msg.radarState.leadOne
+        one = msg.radarState.leadOne
+        two = msg.radarState.leadTwo
         rows[service].append({
           "t": t,
-          "lead_status": bool(x.status),
-          "d_rel": float(x.dRel),
-          "v_rel": float(x.vRel),
-          "v_lead": float(x.vLead),
-          "a_lead": float(x.aLeadK),
-          "lead_prob": float(x.modelProb),
+          "lead_status": bool(one.present),
+          "d_rel": float(one.dRel),
+          "v_rel": float(one.vRel),
+          "v_lead": float(one.vLead),
+          "a_lead": float(one.aLeadK),
+          "lead_prob": float(one.modelProb),
+          "lead_one_status": bool(one.present),
+          "lead_one_d_rel": float(one.dRel),
+          "lead_one_v_rel": float(one.vRel),
+          "lead_one_v_lead": float(one.vLead),
+          "lead_one_a_lead": float(one.aLeadK),
+          "lead_one_prob": float(one.modelProb),
+          "lead_two_status": bool(two.present),
+          "lead_two_d_rel": float(two.dRel),
+          "lead_two_v_rel": float(two.vRel),
+          "lead_two_v_lead": float(two.vLead),
+          "lead_two_a_lead": float(two.aLeadK),
+          "lead_two_prob": float(two.modelProb),
         })
+      elif service == "longitudinalPlanSP":
+        x = msg.longitudinalPlanSP.hondaCrvGuard
+        rows[service].append({
+          "t": t,
+          "crv_guard_enabled": bool(x.enabled),
+          "crv_stop_latch": bool(x.stopLatchActive),
+          "crv_closing_guard": bool(x.closingLeadGuardActive),
+          "crv_low_speed_limit": bool(x.lowSpeedLimitActive),
+          "crv_guarded_lead_index": int(x.guardedLeadIndex),
+          "crv_guard_d_rel": float(x.dRel),
+          "crv_guard_v_rel": float(x.vRel),
+          "crv_guard_lead_prob": float(x.modelProb),
+          "crv_guard_time_gap": float(x.timeGap),
+          "crv_accel_ceiling": float(x.accelCeiling),
+          "crv_unguarded_a_target": float(x.unguardedATarget),
+          "crv_guarded_a_target": float(x.guardedATarget),
+        })
+      elif service == "sendcan":
+        frames = [(can.address, bytes(can.dat), can.src) for can in msg.sendcan]
+        if 0x1df in sendcan_parser.update([(msg.logMonoTime, frames)]):
+          values = sendcan_parser.vl["ACC_CONTROL"]
+          rows[service].append({
+            "t": t,
+            "can_accel_command": float(values["ACCEL_COMMAND"]),
+            "can_gas_command": float(values["GAS_COMMAND"]),
+            "can_brake_request": bool(values["BRAKE_REQUEST"]),
+            "can_standstill": bool(values["STANDSTILL"]),
+            "can_standstill_release": bool(values["STANDSTILL_RELEASE"]),
+            "can_control_on": bool(values["CONTROL_ON"]),
+          })
       elif service == "gpsLocationExternal":
         x = msg.gpsLocationExternal
         rows[service].append({
@@ -146,6 +191,14 @@ def extract_route(log_root: Path, route: str) -> tuple[pd.DataFrame, dict[str, s
           "car_fingerprint": str(x.carFingerprint),
           "longitudinal_actuator_delay": str(float(x.longitudinalActuatorDelay)),
         })
+      elif service == "carParamsSP" and "crv_tune_id" not in metadata:
+        x = msg.carParamsSP.hondaCrvLongitudinalTune
+        if x.enabled:
+          metadata.update({
+            "crv_tune_id": str(x.tuneId),
+            "crv_tune_revision": str(int(x.revision)),
+            "crv_following_time": str(float(x.followingTime)),
+          })
       elif service == "initData" and "git_commit" not in metadata:
         x = msg.initData
         metadata.update({
@@ -177,7 +230,8 @@ def extract_route(log_root: Path, route: str) -> tuple[pd.DataFrame, dict[str, s
 
   # A 20 Hz timeline preserves longitudinal dynamics while keeping Plotly responsive.
   base = pd.DataFrame(rows["carState"]).sort_values("t").iloc[::5].reset_index(drop=True)
-  for service in ("carControl", "carOutput", "controlsState", "longitudinalPlan", "radarState", "selfdriveState", "gpsLocationExternal"):
+  for service in ("carControl", "carOutput", "controlsState", "longitudinalPlan", "longitudinalPlanSP", "radarState",
+                  "sendcan", "selfdriveState", "gpsLocationExternal"):
     other = pd.DataFrame(rows[service]).sort_values("t")
     if not other.empty:
       base = pd.merge_asof(base, other, on="t", direction="nearest", tolerance=0.15)
@@ -192,7 +246,7 @@ def extract_route(log_root: Path, route: str) -> tuple[pd.DataFrame, dict[str, s
   base["plan_speed_mph"] = base["plan_speed"] * 2.236936
   base["speed_error_mph"] = (base["v_ego"] - base["set_speed"]) * 2.236936
   base["plan_error_mph"] = (base["v_ego"] - base["plan_speed"]) * 2.236936
-  base["time_gap"] = np.where((base["lead_status"] == True) & (base["v_ego"] > 0.5),  # noqa: E712
+  base["time_gap"] = np.where(base["lead_status"].eq(True) & (base["v_ego"] > 0.5),
                                     base["d_rel"] / base["v_ego"], np.nan)
   t_follow = base["personality"].map({"relaxed": 1.75, "standard": 1.45, "aggressive": 1.25}).fillna(1.45)
   # Same steady-state following-distance model used by long_mpc.py.
@@ -202,13 +256,18 @@ def extract_route(log_root: Path, route: str) -> tuple[pd.DataFrame, dict[str, s
   ).clip(lower=6.0)
   base["distance_error"] = base["d_rel"] - base["desired_distance"]
 
-  # These drives predate the CR-V hysteresis patch. This exactly reconstructs
-  # the old Bosch crossover used to build ACC_CONTROL.
-  base["brake_request"] = base["long_active"].fillna(False) & (base["accel_output"] < -0.2)
-  base["gas_request"] = base["long_active"].fillna(False) & ~base["brake_request"] & (base["accel_output"] > -0.2)
-  base["can_gas_command"] = np.where(base["gas_request"], base["gas_output"], -30000.0)
+  # Retain the historical inferred crossover only for comparisons. Primary
+  # command fields come from the outgoing ACC_CONTROL CAN message.
+  base["legacy_brake_request"] = base["long_active"].fillna(False) & (base["accel_output"] < -0.2)
+  base["legacy_gas_request"] = base["long_active"].fillna(False) & ~base["legacy_brake_request"] & (base["accel_output"] > -0.2)
+  base["legacy_command_mode"] = np.select(
+    [base["legacy_brake_request"], base["legacy_gas_request"]], ["brake", "gas"], default="inactive")
+  can_control_on = base["can_control_on"].eq(True)
+  base["brake_request"] = base["can_brake_request"].eq(True)
+  base["gas_request"] = can_control_on & ~base["brake_request"] & (base["can_gas_command"] > -30000.0)
   base["command_mode"] = np.select(
-    [base["brake_request"], base["gas_request"]], ["brake", "gas"], default="inactive")
+    [base["brake_request"], base["gas_request"], can_control_on],
+    ["brake", "gas", "coast"], default="inactive")
   dt = base["time"].diff().clip(lower=0.01)
   base["actual_jerk"] = base["a_ego"].diff() / dt
   base["command_jerk"] = base["accel_output"].diff() / dt

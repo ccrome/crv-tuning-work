@@ -151,16 +151,14 @@ def main_figure(frame: pd.DataFrame, route_start: datetime | None = None,
   line(fig, 3, x, frame["accel_i"], "I term", colors["blue"])
   line(fig, 3, x, frame["accel_f"], "Feedforward", colors["green"])
 
-  line(fig, 4, x, frame["accel_output"], "Accel command", colors["purple"])
-  line(fig, 4, x, frame["gas_output"], "Gas command", colors["orange"], secondary_y=True)
+  line(fig, 4, x, frame.get("can_accel_command", frame["accel_output"]), "CAN accel command", colors["purple"])
+  line(fig, 4, x, frame.get("can_gas_command", frame["gas_output"]), "CAN gas command", colors["orange"], secondary_y=True)
   brake = frame["brake_request"].astype(float)
   fig.add_trace(go.Scattergl(
     x=x, y=brake, name="Brake request", mode="lines", fill="tozeroy",
     line={"color": colors["red"], "width": 1}, opacity=0.35,
     hovertemplate="%{x:.2f} s<br>Brake request: %{y:.0f}<extra></extra>",
   ), row=4, col=1, secondary_y=True)
-  fig.add_hline(y=-0.2, line_dash="dot", line_color=colors["gray"], row=4, col=1,
-                annotation_text="stock crossover −0.20 m/s²", annotation_position="bottom right")
 
   line(fig, 5, x, frame["d_rel"], "Measured lead distance", colors["blue"])
   line(fig, 5, x, frame["desired_distance"], "MPC desired distance", colors["green"], dash="dash")
@@ -333,7 +331,7 @@ def app() -> None:
   st.caption(
     f"{metadata.get('car_fingerprint', 'unknown car')} · sunnypilot {metadata.get('software_version', '?')} · "
     f"{metadata.get('git_branch', '?')} @ {metadata.get('git_commit', '')[:8]} · "
-    f"20 Hz extraction · stock Bosch crossover reconstructed at −0.20 m/s²"
+    f"20 Hz extraction · outgoing Honda ACC_CONTROL decoded from sendcan"
   )
 
   regions = {
@@ -360,7 +358,7 @@ def app() -> None:
     st.markdown(
       "- **Planner input:** `longitudinalPlan.accels[0]`, planned speed, lead state and source.\n"
       "- **Controller:** P/I/feedforward terms and `carControl.actuators.accel`.\n"
-      "- **Honda output:** `carOutput.actuatorsOutput.accel/gas`; brake request reconstructed from the stock −0.20 m/s² crossover.\n"
+      "- **Honda output:** decoded `ACC_CONTROL` acceleration, gas, brake, standstill, and release fields from `sendcan`.\n"
       "- **Vehicle response:** `carState.vEgo/aEgo`.\n"
       "- **Following:** model lead distance/relative velocity and the MPC steady-state desired distance."
     )
