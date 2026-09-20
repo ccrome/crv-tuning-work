@@ -5,6 +5,13 @@ build. Brake-hold engagement protection and cluster-speed calibration are
 already installed and are deliberately excluded. Each item needs an isolated
 fix and a passing automated check before an on-road trial.
 
+| Issue | Regression created | Implemented | Validated on live drives | Current state |
+|---|---|---|---|---|
+| L1 — brief tracker loss | Yes: 16, 32, 56, and 72 mph cases | Partial: the deployed initial guard covers the 16 mph case only | No: two live routes ran the release, but neither triggered a qualifying tracker loss | Generalize the risk-based guard, then collect a triggered drive |
+| L2 — close stopped-lead restart | Yes: deterministic 2.7 m stopped-lead loss case | Yes, draft PR #7; not built or installed | No | Build and validate separately at low speed |
+| L3 — high-speed tracked-lead braking | Yes: driver-marked route-1e log regression | No | No | Investigate braking timing/response independently of tracker loss |
+| L4 — no-lead speed regulation | Yes: highway and moderate-speed log regressions | No | No matched candidate drive | Make an isolated regulation change, then collect matched moderate and highway runs |
+
 ## L1 — credible closing lead can lose braking after a brief tracker loss
 
 - Status: confirmed; highest priority.
