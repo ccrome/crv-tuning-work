@@ -174,6 +174,36 @@ stop-release safety fix exists.
 The expected-failure decorator must be removed only when the focused L2 fix is
 implemented and this becomes a normal required pass.
 
+## Experiment SR2 — close stopped-lead dropout hold
+
+Status: implemented and simulation-validated; not built, installed, or
+road-tested.
+
+- Source commit: `b8aed862d2`
+- Draft PR: https://github.com/ccrome/sunnypilot/pull/7 (stacked on SR1)
+- Scope: `HONDA_CRV_5G` only. No runtime option, following-distance,
+  experimental-mode, Honda actuator-crossover, or speed-regulation change.
+- Behavior: after confirming a stopped lead within `3 m` while the CR-V is
+  essentially stopped, loss of both radar candidates starts a `0.5 s` hold.
+  The planner caps acceleration at zero and keeps `shouldStop` true for that
+  interval.
+- Test change: SR1 is now a normal required pass and verifies both no restart
+  acceleration and retained `shouldStop` during the loss.
+- Validation:
+
+  ```bash
+  .venv/bin/python -m unittest \
+    openpilot.selfdrive.test.longitudinal_maneuvers.test_crv_stop_release_regression \
+    openpilot.selfdrive.test.longitudinal_maneuvers.test_crv_lead_source_regression
+  .venv/bin/python -m unittest \
+    openpilot.selfdrive.test.longitudinal_maneuvers.test_longitudinal
+  ```
+
+On-road acceptance: make an ordinary low-speed stop behind traffic and bookmark
+any release, surge, or harsh hold. A pass is no restart into a nearby stopped
+lead and no new awkward hold/release feel. Do not combine this drive with a
+speed-regulation experiment.
+
 ## Regression test SRG1 — no-lead speed regulation
 
 Status: added; expected failure on the logged baseline. This is a log-backed
