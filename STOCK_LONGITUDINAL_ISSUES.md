@@ -7,8 +7,8 @@ fix and a passing automated check before an on-road trial.
 
 | Issue | Regression created | Implemented | Validated on live drives | Current state |
 |---|---|---|---|---|
-| L1 — brief tracker loss | Yes: 16, 32, 56, and 72 mph cases | Partial: the deployed initial guard covers the 16 mph case only | No: two live routes ran the release, but neither triggered a qualifying tracker loss | Generalize the risk-based guard, then collect a triggered drive |
-| L2 — close stopped-lead restart | Yes: deterministic 2.7 m stopped-lead loss case | Yes, draft PR #7; not built or installed | No | Build and validate separately at low speed |
+| L1 — brief tracker loss | Yes: [PR #4](https://github.com/ccrome/sunnypilot/pull/4) reproduces the close-lead case; [PR #8](https://github.com/ccrome/sunnypilot/pull/8) covers 16, 32, 56, and 72 mph | Partial: [PR #5](https://github.com/ccrome/sunnypilot/pull/5) provides the deployed 16 mph guard only | No: two live routes ran the release, but neither triggered a qualifying tracker loss | Generalize the risk-based guard, then collect a triggered drive |
+| L2 — close stopped-lead restart | Yes: [PR #6](https://github.com/ccrome/sunnypilot/pull/6) adds the deterministic 2.7 m stopped-lead loss case | Yes: [PR #7](https://github.com/ccrome/sunnypilot/pull/7) is drafted but not built or installed | No | Build and validate separately at low speed |
 | L3 — high-speed tracked-lead braking | Yes: driver-marked route-1e log regression | No | No | Investigate braking timing/response independently of tracker loss |
 | L4 — no-lead speed regulation | Yes: highway and moderate-speed log regressions | No | No matched candidate drive | Make an isolated regulation change, then collect matched moderate and highway runs |
 
@@ -23,9 +23,11 @@ fix and a passing automated check before an on-road trial.
   seconds while cruise remains set.
 - Required outcome: when a recently credible lead was close and closing, do
   not authorize positive acceleration merely because tracker candidates vanish.
-- Automated check: `test_crv_brief_tracker_loss_regression.py`. The low-speed
-  case passes with the installed initial guard; the 32, 56, and 72 mph cases
-  remain expected failures until that guard is generalized.
+- Automated check: `test_crv_brief_tracker_loss_regression.py` in
+  [PR #8](https://github.com/ccrome/sunnypilot/pull/8). The low-speed case
+  passes with the installed initial guard in
+  [PR #5](https://github.com/ccrome/sunnypilot/pull/5); the 32, 56, and 72 mph
+  cases remain expected failures until that guard is generalized.
 
 ## L2 — stopped or near-stopped following can resume with too little margin
 
@@ -37,8 +39,10 @@ fix and a passing automated check before an on-road trial.
   past 20 mph while the estimated gap remains under about `8 m`.
 - Required outcome: stop release must retain a conservative gap and must not
   resume toward a close, closing lead.
-- Automated check: `test_crv_stop_release_regression.py`. The focused L2 hold
-  is in draft PR #7 and must receive isolated low-speed on-road validation.
+- Automated check: `test_crv_stop_release_regression.py` in
+  [PR #6](https://github.com/ccrome/sunnypilot/pull/6). The focused L2 hold
+  is in [PR #7](https://github.com/ccrome/sunnypilot/pull/7) and must receive
+  isolated low-speed on-road validation.
 
 ## L3 — some high-speed tracked-lead approaches brake too late
 
