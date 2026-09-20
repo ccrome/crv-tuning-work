@@ -145,6 +145,35 @@ unproven on road.
   worked on road yet. A deliberately bookmarked low-speed lead-loss/reacquire
   event is still needed.
 
+## Regression test SR1 — close stopped-lead release
+
+Status: added; expected failure on the current release until a focused
+stop-release safety fix exists.
+
+- Source commit: `b75959fafb` (stacked on LSR2)
+- Draft PR: https://github.com/ccrome/sunnypilot/pull/6
+- Evidence: baseline route `0000001e--2d841e7d0b`, approximately 2808 s. After
+  a long stop with a lead near `2.7 m`, outgoing acceleration changes from
+  braking to positive and the CR-V accelerates while the gap remains below
+  about `8 m`.
+- Test: `openpilot/selfdrive/test/longitudinal_maneuvers/test_crv_stop_release_regression.py`
+- Setup: stop the CR-V `2.7 m` behind a stopped lead, establish that lead for
+  one second, then remove both tracker candidates for 0.5 seconds while cruise
+  stays set.
+- Current result: expected failure. Stock immediately commands approximately
+  `+1.6 m/s²` and begins moving toward the unseen physical lead.
+- Requirement: while the remembered stopped lead remains within `3 m`, a
+  tracker dropout must not authorize restart acceleration.
+- Validation command:
+
+  ```bash
+  .venv/bin/python -m unittest \
+    openpilot.selfdrive.test.longitudinal_maneuvers.test_crv_stop_release_regression
+  ```
+
+The expected-failure decorator must be removed only when the focused L2 fix is
+implemented and this becomes a normal required pass.
+
 ## Experiment BG1 — “best guess v1”
 
 Status: incomplete evidence; not suitable as a final comparison.
