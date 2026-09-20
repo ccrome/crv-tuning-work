@@ -5,16 +5,19 @@ build. Brake-hold engagement protection and cluster-speed calibration are
 already installed and are deliberately excluded. Each item needs an isolated
 fix and a passing automated check before an on-road trial.
 
-| Issue | Regression created | Implemented | Validated on live drives | Current state |
-|---|---|---|---|---|
-| L1 — brief tracker loss | Yes: [PR #4](https://github.com/ccrome/sunnypilot/pull/4) reproduces the close-lead case; [PR #8](https://github.com/ccrome/sunnypilot/pull/8) covers 16, 32, 56, and 72 mph | Partial: [PR #5](https://github.com/ccrome/sunnypilot/pull/5) provides the deployed 16 mph guard only | No: two live routes ran the release, but neither triggered a qualifying tracker loss | Generalize the risk-based guard, then collect a triggered drive |
-| L2 — close stopped-lead restart | Yes: [PR #6](https://github.com/ccrome/sunnypilot/pull/6) adds the deterministic 2.7 m stopped-lead loss case | Yes: [PR #7](https://github.com/ccrome/sunnypilot/pull/7) is drafted but not built or installed | No | Build and validate separately at low speed |
-| L3 — high-speed tracked-lead braking | Yes: driver-marked route-1e log regression | No | No | Investigate braking timing/response independently of tracker loss |
-| L4 — no-lead speed regulation | Yes: highway and moderate-speed log regressions | No | No matched candidate drive | Make an isolated regulation change, then collect matched moderate and highway runs |
+| Issue | Local route ID(s) | OpenPilot route ID(s) | Regression created | Implemented | Validated on live drives | Current state |
+|---|---|---|---|---|---|---|
+| L1 — brief tracker loss | `route-5c` (`0000005c--3c70bb383d`); `route-22` (`00000022--21f81e5069`); `route-1e` (`0000001e--2d841e7d0b`) | TBD | Yes: [PR #4](https://github.com/ccrome/sunnypilot/pull/4) reproduces the close-lead case; [PR #8](https://github.com/ccrome/sunnypilot/pull/8) covers 16, 32, 56, and 72 mph | Partial: [PR #5](https://github.com/ccrome/sunnypilot/pull/5) provides the deployed 16 mph guard only | No: two live routes ran the release, but neither triggered a qualifying tracker loss | Generalize the risk-based guard, then collect a triggered drive |
+| L2 — close stopped-lead restart | `route-5c` (`0000005c--3c70bb383d`); `route-1e` (`0000001e--2d841e7d0b`) | TBD | Yes: [PR #6](https://github.com/ccrome/sunnypilot/pull/6) adds the deterministic 2.7 m stopped-lead loss case | Yes: [PR #7](https://github.com/ccrome/sunnypilot/pull/7) is drafted but not built or installed | No | Build and validate separately at low speed |
+| L3 — high-speed tracked-lead braking | `route-1e` (`0000001e--2d841e7d0b`) | TBD | Yes: driver-marked route-1e log regression | No | No | Investigate braking timing/response independently of tracker loss |
+| L4 — no-lead speed regulation | `route-5c` (`0000005c--3c70bb383d`); `route-5d` (`0000005d--46b3832579`) | TBD | Yes: highway and moderate-speed log regressions | No | No matched candidate drive | Make an isolated regulation change, then collect matched moderate and highway runs |
 
 ## L1 — credible closing lead can lose braking after a brief tracker loss
 
 - Status: confirmed; highest priority.
+- Local route IDs: `route-5c` (`0000005c--3c70bb383d`), `route-22`
+  (`00000022--21f81e5069`), and `route-1e` (`0000001e--2d841e7d0b`).
+- OpenPilot route ID(s): TBD.
 - Evidence: baseline route `0000005c--3c70bb383d`, approximately 640–710 s,
   has 56 source changes among `lead0`, `lead1`, and `cruise`. Commands range
   from `-2.36` to `+0.80 m/s²` while the model lead is as close as `1.04 m`.
@@ -33,6 +36,9 @@ fix and a passing automated check before an on-road trial.
 
 - Status: confirmed observation; root cause overlaps L1 but needs a separate
   stop-release test.
+- Local route IDs: `route-5c` (`0000005c--3c70bb383d`) and `route-1e`
+  (`0000001e--2d841e7d0b`).
+- OpenPilot route ID(s): TBD.
 - Evidence: route 5c has ten stopped-following episodes; valid model-lead
   distances have a `1.04 m` minimum and `2.78 m` median. On route 1e around
   2808 s, output becomes positive near a `2.7 m` gap and the CR-V accelerates
@@ -48,6 +54,8 @@ fix and a passing automated check before an on-road trial.
 
 - Status: driver-reported and log-supported; lead validity must be checked per
   event before changing control logic.
+- Local route ID: `route-1e` (`0000001e--2d841e7d0b`).
+- OpenPilot route ID(s): TBD.
 - Evidence: route 1e around 1974–1994 s was driver-marked after an approach
   from about 72 mph toward a lead closing at roughly `4.3 m/s`; the driver
   braked near 63 mph and about 26 m.
@@ -59,6 +67,9 @@ fix and a passing automated check before an on-road trial.
 ## L4 — steady no-lead highway speed oscillates and overshoots
 
 - Status: confirmed; separate from lead-following safety.
+- Local route IDs: `route-5c` (`0000005c--3c70bb383d`) and `route-5d`
+  (`0000005d--46b3832579`).
+- OpenPilot route ID(s): TBD.
 - Evidence: stock baseline no-lead, stable-set-speed windows reach `4.07 mph`
   peak-to-peak variation on route 5c and `4.30 mph` on route 5d. Maximum
   overshoot is `+2.63 mph` and `+2.26 mph`; broader reviewed windows reach
