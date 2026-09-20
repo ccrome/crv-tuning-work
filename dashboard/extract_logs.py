@@ -135,22 +135,24 @@ def extract_route(log_root: Path, route: str) -> tuple[pd.DataFrame, dict[str, s
           "lead_two_prob": float(two.modelProb),
         })
       elif service == "longitudinalPlanSP":
-        x = msg.longitudinalPlanSP.hondaCrvGuard
-        rows[service].append({
-          "t": t,
-          "crv_guard_enabled": bool(x.enabled),
-          "crv_stop_latch": bool(x.stopLatchActive),
-          "crv_closing_guard": bool(x.closingLeadGuardActive),
-          "crv_low_speed_limit": bool(x.lowSpeedLimitActive),
-          "crv_guarded_lead_index": int(x.guardedLeadIndex),
-          "crv_guard_d_rel": float(x.dRel),
-          "crv_guard_v_rel": float(x.vRel),
-          "crv_guard_lead_prob": float(x.modelProb),
-          "crv_guard_time_gap": float(x.timeGap),
-          "crv_accel_ceiling": float(x.accelCeiling),
-          "crv_unguarded_a_target": float(x.unguardedATarget),
-          "crv_guarded_a_target": float(x.guardedATarget),
-        })
+        plan_sp = msg.longitudinalPlanSP
+        if hasattr(plan_sp, "hondaCrvGuard"):
+          x = plan_sp.hondaCrvGuard
+          rows[service].append({
+            "t": t,
+            "crv_guard_enabled": bool(x.enabled),
+            "crv_stop_latch": bool(x.stopLatchActive),
+            "crv_closing_guard": bool(x.closingLeadGuardActive),
+            "crv_low_speed_limit": bool(x.lowSpeedLimitActive),
+            "crv_guarded_lead_index": int(x.guardedLeadIndex),
+            "crv_guard_d_rel": float(x.dRel),
+            "crv_guard_v_rel": float(x.vRel),
+            "crv_guard_lead_prob": float(x.modelProb),
+            "crv_guard_time_gap": float(x.timeGap),
+            "crv_accel_ceiling": float(x.accelCeiling),
+            "crv_unguarded_a_target": float(x.unguardedATarget),
+            "crv_guarded_a_target": float(x.guardedATarget),
+          })
       elif service == "sendcan":
         frames = [(can.address, bytes(can.dat), can.src) for can in msg.sendcan]
         if 0x1df in sendcan_parser.update([(msg.logMonoTime, frames)]):
@@ -192,13 +194,21 @@ def extract_route(log_root: Path, route: str) -> tuple[pd.DataFrame, dict[str, s
           "longitudinal_actuator_delay": str(float(x.longitudinalActuatorDelay)),
         })
       elif service == "carParamsSP" and "crv_tune_id" not in metadata:
-        x = msg.carParamsSP.hondaCrvLongitudinalTune
-        if x.enabled:
-          metadata.update({
-            "crv_tune_id": str(x.tuneId),
-            "crv_tune_revision": str(int(x.revision)),
-            "crv_following_time": str(float(x.followingTime)),
-          })
+        params_sp = msg.carParamsSP
+        if not hasattr(params_sp, "hondaCrvLongitudinalTune"):
+          # New stock-schema releases deliberately have no runtime CR-V tuning
+          # profile. Older logs retain the optional field below.
+          metadata["crv_tune_id"] = "stock"
+        else:
+          x = params_sp.hondaCrvLongitudinalTune
+          if x.enabled:
+            metadata.update({
+              "crv_tune_id": str(x.tuneId),
+              "crv_tune_revision": str(int(x.revision)),
+              "crv_following_time": str(float(x.followingTime)),
+            })
+          else:
+            metadata["crv_tune_id"] = "stock"
       elif service == "initData" and "git_commit" not in metadata:
         x = msg.initData
         metadata.update({
@@ -232,6 +242,8 @@ def extract_route(log_root: Path, route: str) -> tuple[pd.DataFrame, dict[str, s
   base = pd.DataFrame(rows["carState"]).sort_values("t").iloc[::5].reset_index(drop=True)
   for service in ("carControl", "carOutput", "controlsState", "longitudinalPlan", "longitudinalPlanSP", "radarState",
                   "sendcan", "selfdriveState", "gpsLocationExternal"):
+    if not rows[service]:
+      continue
     other = pd.DataFrame(rows[service]).sort_values("t")
     if not other.empty:
       base = pd.merge_asof(base, other, on="t", direction="nearest", tolerance=0.15)

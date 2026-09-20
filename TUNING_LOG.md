@@ -125,6 +125,26 @@ On-road acceptance: test a low-speed close-following route with bookmarks;
 confirm no release toward a close, closing lead and no new harsh hold/release
 feel. Compare jerk, stop gap, and source changes against S0.
 
+### LSR2-R1 — first on-road validation routes
+
+Status: release confirmed; patch trigger not observed, so efficacy remains
+unproven on road.
+
+- Native release: `315f2d0dfc97d9a3957f622ad3ce7ce4698f01b8`
+- Routes: `00000004--0a2432880c` (11.4 min) and
+  `00000005--e710b97a54` (11.5 min), both on `crv-sng-tuning` with the stock
+  schema and `0.5 s` actuator delay.
+- Bookmarks: none.
+- Route 4: 50 engaged samples with a seen lead closer than `11 m` and closing
+  faster than `1.0 m/s`; no positive planner target occurred in those samples.
+  The observed approach ran from roughly `10.9 m` to `5.0 m` while braking.
+- Route 5: no engaged close-and-closing lead samples.
+- Trigger check: neither route lost both radar lead candidates within 0.5 s of
+  a close-and-closing lead. Therefore neither route exercised the new hold.
+- Verdict: no regression seen in these routes, but do not claim the patch
+  worked on road yet. A deliberately bookmarked low-speed lead-loss/reacquire
+  event is still needed.
+
 ## Experiment BG1 — “best guess v1”
 
 Status: incomplete evidence; not suitable as a final comparison.
