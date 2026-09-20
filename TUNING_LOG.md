@@ -70,24 +70,22 @@ Baseline diagnosis:
 
 ## Regression tests L1 — brief tracker loss
 
-Status: consolidated. The 16 mph case passes with L1a; the 32, 56, and 72 mph
-cases remain expected failures until the L1 guard is generalized.
+Status: implemented in draft; all deterministic cases pass. It has not been
+built or validated on a triggered live drive.
 
-- Source commit: `b6f9abe52e` (stacked on the brake-hold branch)
-- Draft PR: https://github.com/ccrome/sunnypilot/pull/4
-- Original test: `test_crv_lead_source_regression.py` (superseded by the
-  consolidated `test_crv_brief_tracker_loss_regression.py`)
-- Consolidated suite: draft PR https://github.com/ccrome/sunnypilot/pull/8
-  (`836c1fc9a0`). It covers 16, 32, 56, and 72 mph tracker-loss cases. The
-  16 mph case is a normal pass; the other three are expected failures for the
-  risk-based L1 generalization.
+- Source commit: `d631274f11` (stacked on the brake-hold branch)
+- Draft PR: https://github.com/ccrome/sunnypilot/pull/5
+- Test: `test_crv_brief_tracker_loss_regression.py`. It covers 16, 32, 56,
+  and 72 mph brief tracker-loss cases, all as required passes.
 - Setup: establish a slower lead at `12 m` while traveling at `7.0 m/s`, then
   remove both tracker candidates for 0.5 seconds while cruise remains set.
-- Requirement: while the lead remains within `11 m` and closing faster than
-  `1.0 m/s`, planner output must not become positive merely because the lead
-  source changes to cruise.
-- Current stock result: expected failure. It switches to cruise and reaches
-  approximately `+1.26 m/s²` while the gap is below `10 m`.
+- Requirement: after a CR-V MPC-selected lead disappears from both radar
+  candidates, planner output must not become positive for the 0.5 s
+  tracker-loss hold.
+- Change: arm the hold only while a radar lead is currently present, then
+  retain the preceding non-positive request through complete tracker loss.
+- Baseline result: the stock planner can switch to cruise and accelerate while
+  the lead is absent.
 - Test command:
 
   ```bash
@@ -95,8 +93,7 @@ cases remain expected failures until the L1 guard is generalized.
     openpilot.selfdrive.test.longitudinal_maneuvers.test_crv_brief_tracker_loss_regression
   ```
 
-The moderate-speed expected-failure decorator must be removed when generalizing
-L1. At that point, both brief-tracker-loss cases become required normal passes.
+All four brief-tracker-loss cases are required normal passes in PR #5.
 
 ## Experiment L1a — initial brief tracker-loss hold
 
