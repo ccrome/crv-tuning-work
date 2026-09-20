@@ -5,18 +5,20 @@ build. Brake-hold engagement protection and cluster-speed calibration are
 already installed and are deliberately excluded. Each item needs an isolated
 fix and a passing automated check before an on-road trial.
 
-## L1 — close, closing lead can lose braking after a tracker dropout
+## L1 — credible closing lead can lose braking after a brief tracker loss
 
 - Status: confirmed; highest priority.
 - Evidence: baseline route `0000005c--3c70bb383d`, approximately 640–710 s,
   has 56 source changes among `lead0`, `lead1`, and `cruise`. Commands range
   from `-2.36` to `+0.80 m/s²` while the model lead is as close as `1.04 m`.
-- Reproduction: establish a `12 m` slower lead at `7.0 m/s`, then drop both
-  tracker candidates for 0.5 seconds while cruise is set.
-- Required outcome: while the lead is within `11 m` and closing faster than
-  `1.0 m/s`, do not command positive acceleration because the source dropped.
-- Automated check: `test_crv_lead_source_regression.py`. It is an expected
-  failure on the stock baseline and must become a normal pass for a fix.
+- Reproductions: a `12 m` slower lead at `7.0 m/s`, and the route-22-like
+  32 mph / 16 m / `-2.3 m/s` closing-lead case. Both drop tracker candidates
+  for 0.5 seconds while cruise remains set.
+- Required outcome: when a recently credible lead was close and closing, do
+  not authorize positive acceleration merely because tracker candidates vanish.
+- Automated check: `test_crv_brief_tracker_loss_regression.py`. The low-speed
+  case passes with the installed initial guard; the moderate-speed case remains
+  an expected failure until that guard is generalized.
 
 ## L2 — stopped or near-stopped following can resume with too little margin
 
@@ -28,22 +30,20 @@ fix and a passing automated check before an on-road trial.
   past 20 mph while the estimated gap remains under about `8 m`.
 - Required outcome: stop release must retain a conservative gap and must not
   resume toward a close, closing lead.
-- Next test: construct a deterministic stopped-lead / short source-loss case;
-  measure minimum gap, positive-command timing, and restart smoothness.
+- Automated check: `test_crv_stop_release_regression.py`. The focused L2 hold
+  is in draft PR #7 and must receive isolated low-speed on-road validation.
 
-## L3 — some highway closing approaches brake too late or keep accelerating
+## L3 — some high-speed tracked-lead approaches brake too late
 
 - Status: driver-reported and log-supported; lead validity must be checked per
   event before changing control logic.
 - Evidence: route 1e around 1974–1994 s was driver-marked after an approach
   from about 72 mph toward a lead closing at roughly `4.3 m/s`; the driver
-  braked near 63 mph and about 26 m. Route 22 around 904 s records roughly
-  `+1.0 m/s²` requested acceleration at 32 mph, 16 m, and `-2.3 m/s` relative
-  speed before tracking changes and driver intervention.
+  braked near 63 mph and about 26 m.
 - Required outcome: a credible close, rapidly closing lead must constrain
   acceleration early enough without reacting to one-sample tracker noise.
-- Next test: replay a validated log window or build a synthetic closing-lead
-  case with a required non-positive command threshold.
+- Automated check: `dashboard/test_high_speed_braking_regression.py` evaluates
+  the documented pre-takeover window. It remains a log-backed expected failure.
 
 ## L4 — steady no-lead highway speed oscillates and overshoots
 

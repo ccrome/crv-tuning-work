@@ -68,13 +68,18 @@ Baseline diagnosis:
    overshoot.
 3. These are separate problems and should be tested separately.
 
-## Regression test LSR1 — close, closing lead-source dropout
+## Regression tests L1 — brief tracker loss
 
-Status: added; expected failure on stock until a focused safety fix exists.
+Status: consolidated. The low-speed case passes with L1a; the moderate-speed
+case remains an expected failure until the L1 guard is generalized.
 
 - Source commit: `b6f9abe52e` (stacked on the brake-hold branch)
 - Draft PR: https://github.com/ccrome/sunnypilot/pull/4
-- Test: `openpilot/selfdrive/test/longitudinal_maneuvers/test_crv_lead_source_regression.py`
+- Original test: `test_crv_lead_source_regression.py` (superseded by the
+  consolidated `test_crv_brief_tracker_loss_regression.py`)
+- Consolidated suite: draft PR https://github.com/ccrome/sunnypilot/pull/8
+  (`2f681622eb`). Its low-speed case is a normal pass; its moderate-speed
+  route-22-like case remains the expected failure for the next L1 change.
 - Setup: establish a slower lead at `12 m` while traveling at `7.0 m/s`, then
   remove both tracker candidates for 0.5 seconds while cruise remains set.
 - Requirement: while the lead remains within `11 m` and closing faster than
@@ -86,46 +91,45 @@ Status: added; expected failure on stock until a focused safety fix exists.
 
   ```bash
   .venv/bin/python -m unittest \
-    openpilot.selfdrive.test.longitudinal_maneuvers.test_crv_lead_source_regression
+    openpilot.selfdrive.test.longitudinal_maneuvers.test_crv_brief_tracker_loss_regression
   ```
 
-The expected-failure decorator must be removed when implementing the safety
-fix. At that point, the test becomes a required normal pass and an unexpected
-success before that change remains visible to CI.
+The moderate-speed expected-failure decorator must be removed when generalizing
+L1. At that point, both brief-tracker-loss cases become required normal passes.
 
-## Experiment LSR2 — CR-V close-lead dropout hold
+## Experiment L1a — initial brief tracker-loss hold
 
 Status: native release built and ready to update; not road-tested.
 
 - Source commit: `2b89b2babd`
-- Draft PR: https://github.com/ccrome/sunnypilot/pull/5 (stacked on LSR1)
+- Draft PR: https://github.com/ccrome/sunnypilot/pull/5 (initial L1 change)
 - Native release: `315f2d0dfc97d9a3957f622ad3ce7ce4698f01b8`
 - Scope: only `HONDA_CRV_5G`; it has no parameter, UI setting, personality,
   following-distance, experimental-mode, or Honda gas/brake crossover change.
 - Behavior: after a credible lead is closer than `11 m` and closing faster than
-  `1.0 m/s`, a loss of both radar lead candidates starts a `0.5 s` hold. During
+  `1.0 m/s`, a brief loss of both tracker candidates starts a `0.5 s` hold. During
   that hold, output cannot exceed zero and is released from the prior braking
   command at no more than `1.0 m/s³`.
-- Test change: LSR1 is now a normal required pass, using an explicitly enabled
+- Test change: the initial L1 case is now a normal required pass, using an explicitly enabled
   CR-V stock-longitudinal simulation rather than an expected failure.
 - Validation:
 
   ```bash
   .venv/bin/python -m unittest \
-    openpilot.selfdrive.test.longitudinal_maneuvers.test_crv_lead_source_regression
+    openpilot.selfdrive.test.longitudinal_maneuvers.test_crv_brief_tracker_loss_regression
   .venv/bin/python -m unittest \
     openpilot.selfdrive.test.longitudinal_maneuvers.test_longitudinal
   .venv/bin/ruff check \
     openpilot/selfdrive/controls/lib/longitudinal_planner.py \
     openpilot/selfdrive/test/longitudinal_maneuvers/plant.py \
-    openpilot/selfdrive/test/longitudinal_maneuvers/test_crv_lead_source_regression.py
+    openpilot/selfdrive/test/longitudinal_maneuvers/test_crv_brief_tracker_loss_regression.py
   ```
 
 On-road acceptance: test a low-speed close-following route with bookmarks;
 confirm no release toward a close, closing lead and no new harsh hold/release
 feel. Compare jerk, stop gap, and source changes against S0.
 
-### LSR2-R1 — first on-road validation routes
+### L1a-R1 — first on-road validation routes
 
 Status: release confirmed; patch trigger not observed, so efficacy remains
 unproven on road.
@@ -150,7 +154,7 @@ unproven on road.
 Status: added; expected failure on the current release until a focused
 stop-release safety fix exists.
 
-- Source commit: `b75959fafb` (stacked on LSR2)
+- Source commit: `b75959fafb` (stacked on L1a)
 - Draft PR: https://github.com/ccrome/sunnypilot/pull/6
 - Evidence: baseline route `0000001e--2d841e7d0b`, approximately 2808 s. After
   a long stop with a lead near `2.7 m`, outgoing acceleration changes from
@@ -194,7 +198,7 @@ road-tested.
   ```bash
   .venv/bin/python -m unittest \
     openpilot.selfdrive.test.longitudinal_maneuvers.test_crv_stop_release_regression \
-    openpilot.selfdrive.test.longitudinal_maneuvers.test_crv_lead_source_regression
+    openpilot.selfdrive.test.longitudinal_maneuvers.test_crv_brief_tracker_loss_regression
   .venv/bin/python -m unittest \
     openpilot.selfdrive.test.longitudinal_maneuvers.test_longitudinal
   ```
@@ -232,29 +236,21 @@ For a speed-regulation experiment, collect matched no-lead routes at both speed
 bands, replace the baseline route IDs, and remove the expected-failure markers.
 Do not combine this with lead-following or stop-release changes.
 
-## Regression tests L3 — credible closing-lead protection
+## Remaining L3 regression — high-speed tracked-lead braking
 
-Status: added; both checks are expected failures pending a focused L3 fix.
+Status: added; expected failure pending a focused high-speed braking fix.
 
-- Moderate-speed source test: draft PR https://github.com/ccrome/sunnypilot/pull/8
-  (source commit `e633aa0ff4`),
-  `test_crv_closing_lead_regression.py`.
-  It reproduces route 22 around 904 s: 32 mph, a 16 m lead, and roughly
-  `-2.3 m/s` closing rate. After lead-source loss, current behavior becomes
-  positively accelerated while the unseen physical lead remains close.
-- Higher-speed log test: `dashboard/test_high_speed_braking_regression.py`.
+- High-speed log test: `dashboard/test_high_speed_braking_regression.py`.
   It reproduces the route-1e driver-marked 1974--1975 s approach: about 72 mph,
   35--45 m gap, and roughly `-4.3 m/s` closing rate. Before driver braking,
   the logged outgoing command reaches only about `-0.99 m/s²`, below the
   provisional `-1.2 m/s²` threshold.
-- These are intentionally separate: the moderate case can become a normal
-  source test after a planner guard; the high-speed case needs matched on-road
-  evidence before a code change can be called successful.
+- The moderate route-22 tracker-loss case is now part of L1. This high-speed
+  case needs matched on-road evidence before a code change can be called
+  successful.
 - Validation commands:
 
   ```bash
-  .venv/bin/python -m unittest \
-    openpilot.selfdrive.test.longitudinal_maneuvers.test_crv_closing_lead_regression
   python -m unittest dashboard.test_high_speed_braking_regression
   ```
 
