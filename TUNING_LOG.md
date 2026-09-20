@@ -95,10 +95,11 @@ success before that change remains visible to CI.
 
 ## Experiment LSR2 — CR-V close-lead dropout hold
 
-Status: implemented and validated in simulation; not deployed or road-tested.
+Status: native release built and ready to update; not road-tested.
 
 - Source commit: `2b89b2babd`
 - Draft PR: https://github.com/ccrome/sunnypilot/pull/5 (stacked on LSR1)
+- Native release: `315f2d0dfc97d9a3957f622ad3ce7ce4698f01b8`
 - Scope: only `HONDA_CRV_5G`; it has no parameter, UI setting, personality,
   following-distance, experimental-mode, or Honda gas/brake crossover change.
 - Behavior: after a credible lead is closer than `11 m` and closing faster than
