@@ -232,6 +232,32 @@ For a speed-regulation experiment, collect matched no-lead routes at both speed
 bands, replace the baseline route IDs, and remove the expected-failure markers.
 Do not combine this with lead-following or stop-release changes.
 
+## Regression tests L3 — credible closing-lead protection
+
+Status: added; both checks are expected failures pending a focused L3 fix.
+
+- Moderate-speed source test: draft PR https://github.com/ccrome/sunnypilot/pull/8
+  (source commit `e633aa0ff4`),
+  `test_crv_closing_lead_regression.py`.
+  It reproduces route 22 around 904 s: 32 mph, a 16 m lead, and roughly
+  `-2.3 m/s` closing rate. After lead-source loss, current behavior becomes
+  positively accelerated while the unseen physical lead remains close.
+- Higher-speed log test: `dashboard/test_high_speed_braking_regression.py`.
+  It reproduces the route-1e driver-marked 1974--1975 s approach: about 72 mph,
+  35--45 m gap, and roughly `-4.3 m/s` closing rate. Before driver braking,
+  the logged outgoing command reaches only about `-0.99 m/s²`, below the
+  provisional `-1.2 m/s²` threshold.
+- These are intentionally separate: the moderate case can become a normal
+  source test after a planner guard; the high-speed case needs matched on-road
+  evidence before a code change can be called successful.
+- Validation commands:
+
+  ```bash
+  .venv/bin/python -m unittest \
+    openpilot.selfdrive.test.longitudinal_maneuvers.test_crv_closing_lead_regression
+  python -m unittest dashboard.test_high_speed_braking_regression
+  ```
+
 ## Experiment BG1 — “best guess v1”
 
 Status: incomplete evidence; not suitable as a final comparison.
