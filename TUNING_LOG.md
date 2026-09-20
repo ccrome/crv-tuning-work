@@ -174,6 +174,34 @@ stop-release safety fix exists.
 The expected-failure decorator must be removed only when the focused L2 fix is
 implemented and this becomes a normal required pass.
 
+## Regression test SRG1 — no-lead speed regulation
+
+Status: added; expected failure on the logged baseline. This is a log-backed
+measurement, not a source-only plant test, because the simplified plant does
+not reproduce the CR-V's real actuator dynamics.
+
+- Test: `dashboard/test_speed_regulation_regression.py`
+- Window rules: 30 seconds, longitudinal active, no radar lead, planner source
+  `cruise`, fixed set speed, no driver gas/brake, and speed error no larger than
+  `2 mph` before calculating variation.
+- Limits: at most `1.0 mph` peak-to-peak variation and `+0.5 mph` overshoot.
+- Highway stock evidence: routes `0000005c--3c70bb383d` and
+  `0000005d--46b3832579`, set roughly 65–70 mph. The strict windows reach
+  about `3.40 mph` peak-to-peak, so the highway test is an expected failure.
+- Moderate-speed evidence: patched-release routes `00000004--0a2432880c` and
+  `00000005--e710b97a54`, set roughly 30–35 mph. The strict windows reach
+  about `1.92 mph` peak-to-peak, so the moderate-speed test is an expected
+  failure too.
+- Validation command:
+
+  ```bash
+  python -m unittest dashboard.test_speed_regulation_regression
+  ```
+
+For a speed-regulation experiment, collect matched no-lead routes at both speed
+bands, replace the baseline route IDs, and remove the expected-failure markers.
+Do not combine this with lead-following or stop-release changes.
+
 ## Experiment BG1 — “best guess v1”
 
 Status: incomplete evidence; not suitable as a final comparison.
