@@ -70,16 +70,17 @@ Baseline diagnosis:
 
 ## Regression tests L1 — brief tracker loss
 
-Status: consolidated. The low-speed case passes with L1a; the moderate-speed
-case remains an expected failure until the L1 guard is generalized.
+Status: consolidated. The 16 mph case passes with L1a; the 32, 56, and 72 mph
+cases remain expected failures until the L1 guard is generalized.
 
 - Source commit: `b6f9abe52e` (stacked on the brake-hold branch)
 - Draft PR: https://github.com/ccrome/sunnypilot/pull/4
 - Original test: `test_crv_lead_source_regression.py` (superseded by the
   consolidated `test_crv_brief_tracker_loss_regression.py`)
 - Consolidated suite: draft PR https://github.com/ccrome/sunnypilot/pull/8
-  (`2f681622eb`). Its low-speed case is a normal pass; its moderate-speed
-  route-22-like case remains the expected failure for the next L1 change.
+  (`836c1fc9a0`). It covers 16, 32, 56, and 72 mph tracker-loss cases. The
+  16 mph case is a normal pass; the other three are expected failures for the
+  risk-based L1 generalization.
 - Setup: establish a slower lead at `12 m` while traveling at `7.0 m/s`, then
   remove both tracker candidates for 0.5 seconds while cruise remains set.
 - Requirement: while the lead remains within `11 m` and closing faster than

@@ -11,14 +11,14 @@ fix and a passing automated check before an on-road trial.
 - Evidence: baseline route `0000005c--3c70bb383d`, approximately 640–710 s,
   has 56 source changes among `lead0`, `lead1`, and `cruise`. Commands range
   from `-2.36` to `+0.80 m/s²` while the model lead is as close as `1.04 m`.
-- Reproductions: a `12 m` slower lead at `7.0 m/s`, and the route-22-like
-  32 mph / 16 m / `-2.3 m/s` closing-lead case. Both drop tracker candidates
-  for 0.5 seconds while cruise remains set.
+- Reproductions: 16 mph / 12 m, 32 mph / 16 m, 56 mph / 26 m, and 72 mph /
+  45 m credible closing-lead cases. Each drops tracker candidates for 0.5
+  seconds while cruise remains set.
 - Required outcome: when a recently credible lead was close and closing, do
   not authorize positive acceleration merely because tracker candidates vanish.
 - Automated check: `test_crv_brief_tracker_loss_regression.py`. The low-speed
-  case passes with the installed initial guard; the moderate-speed case remains
-  an expected failure until that guard is generalized.
+  case passes with the installed initial guard; the 32, 56, and 72 mph cases
+  remain expected failures until that guard is generalized.
 
 ## L2 — stopped or near-stopped following can resume with too little margin
 
